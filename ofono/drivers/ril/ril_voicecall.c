@@ -560,6 +560,10 @@ static void ril_voicecall_dial(struct ofono_voicecall *vc,
 
 	grilio_request_append_utf8(req, phstr); /* Number to dial */
 	grilio_request_append_int32(req, clir); /* CLIR mode */
+	grilio_request_append_int32(req, 0);    /* CallDetails.call_type */
+	grilio_request_append_int32(req, 1);    /* CallDetails.call_domain */
+	grilio_request_append_int32(req, 0);    /* CallDetails.getCsvFromExtras == mParcel.writeString("") */
+	grilio_request_append_int32(req, 0);    /*                                                         */
 	grilio_request_append_int32(req, 0);    /* UUS information (absent) */
 
 	grilio_queue_send_request_full(vd->q, req, RIL_REQUEST_DIAL,
