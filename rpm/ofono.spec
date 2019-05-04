@@ -4,7 +4,7 @@ Version:    1.21
 Release:    1
 Group:      Communications/Connectivity Adaptation
 License:    GPLv2
-URL:        https://git.merproject.org/mer-core/ofono
+URL:        http://github.com/DeadSquirrel01/ofono
 Source:     %{name}-%{version}.tar.bz2
 
 Requires:   dbus
