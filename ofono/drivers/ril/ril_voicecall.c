@@ -151,20 +151,21 @@ static GSList *ril_voicecall_parse_clcc(const void *data, guint len)
 
 		grilio_parser_get_int32(&rilp, NULL); /* als */
 		grilio_parser_get_int32(&rilp, &call->type); /* isVoice */
+		grilio_parser_get_int32(&rilp, NULL); /* Samsung CallDetails */
 		grilio_parser_get_int32(&rilp, NULL); /* isVoicePrivacy */
-		number = grilio_parser_get_utf8(&rilp);
-		if (number) {
-			strncpy(call->phone_number.number, number,
-				OFONO_MAX_PHONE_NUMBER_LENGTH);
-			g_free(number);
-		}
-		grilio_parser_get_int32(&rilp, NULL); /* numberPresentation */
 		name = grilio_parser_get_utf8(&rilp);
 		if (name) {
 			strncpy(call->name, name, OFONO_MAX_CALLER_NAME_LENGTH);
 			g_free(name);
 		}
 		grilio_parser_get_int32(&rilp, NULL); /* namePresentation */
+		number = grilio_parser_get_utf8(&rilp);
+			if (number) {
+			strncpy(call->phone_number.number, number,
+				OFONO_MAX_PHONE_NUMBER_LENGTH);
+			g_free(number);
+		}
+		grilio_parser_get_int32(&rilp, NULL); /* numberPresentation */
 		grilio_parser_get_int32(&rilp, &tmp); /* uusInfo */
 		GASSERT(!tmp);
 
