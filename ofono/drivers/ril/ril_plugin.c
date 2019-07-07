@@ -89,6 +89,7 @@
 #define RILMODEM_DEFAULT_NETWORK_SELECTION_MANUAL_0 TRUE
 #define RILMODEM_DEFAULT_USE_DATA_PROFILES FALSE
 #define RILMODEM_DEFAULT_MMS_DATA_PROFILE_ID RIL_DATA_PROFILE_IMS
+#define RILMODEM_DEFAULT_SAMSUNG_CALLDETAILS FALSE
 #define RILMODEM_DEFAULT_SLOT_FLAGS SAILFISH_SLOT_NO_FLAGS
 
 /* RIL socket transport name and parameters */
@@ -142,6 +143,7 @@
 #define RILCONF_NETWORK_SELECTION_MANUAL_0  "networkSelectionManual0"
 #define RILCONF_USE_DATA_PROFILES           "useDataProfiles"
 #define RILCONF_MMS_DATA_PROFILE_ID         "mmsDataProfileId"
+#define RILMODEM_SAMSUNG_CALLDETAILS        "samsungCallDetails"
 
 /* Modem error ids */
 #define RIL_ERROR_ID_RILD_RESTART           "rild-restart"
@@ -1059,6 +1061,7 @@ static void ril_plugin_slot_connected(ril_slot *slot)
 				slot->imeisv, ril_plugin_sim_state(slot),
 				slot->slot_flags);
 		sailfish_manager_set_cell_info(slot->handle, slot->cell_info);
+		grilio_channel_set_enabled(slot->io, slot->handle->enabled);
 
 		/* Check if this was the last slot we were waiting for */
 		ril_plugin_check_if_started(plugin);
@@ -1226,6 +1229,7 @@ static ril_slot *ril_plugin_slot_new_take(char *transport,
 		RILMODEM_DEFAULT_NETWORK_SELECTION_MANUAL_0;
 	config->use_data_profiles = RILMODEM_DEFAULT_USE_DATA_PROFILES;
 	config->mms_data_profile_id = RILMODEM_DEFAULT_MMS_DATA_PROFILE_ID;
+	config->samsung_calldetails = RILMODEM_DEFAULT_SAMSUNG_CALLDETAILS;
 	slot->timeout = RILMODEM_DEFAULT_TIMEOUT;
 	slot->sim_flags = RILMODEM_DEFAULT_SIM_FLAGS;
 	slot->slot_flags = RILMODEM_DEFAULT_SLOT_FLAGS;
@@ -1519,6 +1523,13 @@ static ril_slot *ril_plugin_parse_config_group(GKeyFile *file,
 		config->mms_data_profile_id = ival;
 		DBG("%s: " RILCONF_MMS_DATA_PROFILE_ID " %u", group,
 						config->mms_data_profile_id);
+	}
+
+	/* samsungCallDetails */
+	if (ril_config_get_boolean(file, group, RILMODEM_SAMSUNG_CALLDETAILS,
+					&config->samsung_calldetails)) {
+		DBG("%s: " RILMODEM_SAMSUNG_CALLDETAILS " %s", group,
+				config->samsung_calldetails ? "on" : "off");
 	}
 
 	/* technologies */
@@ -2136,7 +2147,9 @@ static void ril_slot_enabled_changed(struct sailfish_slot_impl *s)
 {
 	if (s->handle->enabled) {
 		ril_plugin_check_modem(s);
+		grilio_channel_set_enabled(s->io, TRUE);
 	} else {
+		grilio_channel_set_enabled(s->io, FALSE);
 		ril_plugin_shutdown_slot(s, FALSE);
 	}
 }
