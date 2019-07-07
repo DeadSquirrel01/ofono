@@ -63,6 +63,7 @@ struct ril_slot_config {
 	gboolean enable_stk;
 	gboolean network_selection_manual_0;
 	gboolean use_data_profiles;
+	gboolean samsung_calldetails;
 	guint mms_data_profile_id;
 	GUtilInts *local_hangup_reasons;
 	GUtilInts *remote_hangup_reasons;

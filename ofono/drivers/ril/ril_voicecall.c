@@ -135,6 +135,7 @@ static GSList *ril_voicecall_parse_clcc(const void *data, guint len)
 	grilio_parser_get_int32(&rilp, &num);
 	for (i = 0; i < num; i++) {
 		struct ofono_call *call = g_new(struct ofono_call, 1);
+		struct ril_slot_config *config;
 		gint tmp;
 
 		ofono_call_init(call);
@@ -151,21 +152,33 @@ static GSList *ril_voicecall_parse_clcc(const void *data, guint len)
 
 		grilio_parser_get_int32(&rilp, NULL); /* als */
 		grilio_parser_get_int32(&rilp, &call->type); /* isVoice */
-		grilio_parser_get_int32(&rilp, NULL); /* Samsung CallDetails */
+		if (config->samsung_calldetails)
+			grilio_parser_get_int32(&rilp, NULL); /* Samsung CallDetails */
 		grilio_parser_get_int32(&rilp, NULL); /* isVoicePrivacy */
+		if (!config->samsung_calldetails) {
+			number = grilio_parser_get_utf8(&rilp);
+			if (number) {
+				strncpy(call->phone_number.number, number,
+					OFONO_MAX_PHONE_NUMBER_LENGTH);
+				g_free(number);
+			}
+			grilio_parser_get_int32(&rilp, NULL); /* numberPresentation */
+		}
 		name = grilio_parser_get_utf8(&rilp);
 		if (name) {
 			strncpy(call->name, name, OFONO_MAX_CALLER_NAME_LENGTH);
 			g_free(name);
 		}
 		grilio_parser_get_int32(&rilp, NULL); /* namePresentation */
-		number = grilio_parser_get_utf8(&rilp);
+		if (config->samsung_calldetails) {
+			number = grilio_parser_get_utf8(&rilp);
 			if (number) {
-			strncpy(call->phone_number.number, number,
-				OFONO_MAX_PHONE_NUMBER_LENGTH);
-			g_free(number);
+				strncpy(call->phone_number.number, number,
+					OFONO_MAX_PHONE_NUMBER_LENGTH);
+				g_free(number);
+			}
+			grilio_parser_get_int32(&rilp, NULL); /* numberPresentation */
 		}
-		grilio_parser_get_int32(&rilp, NULL); /* numberPresentation */
 		grilio_parser_get_int32(&rilp, &tmp); /* uusInfo */
 		GASSERT(!tmp);
 
@@ -549,6 +562,7 @@ static void ril_voicecall_dial(struct ofono_voicecall *vc,
 			void *data)
 {
 	struct ril_voicecall *vd = ril_voicecall_get_data(vc);
+	struct ril_slot_config *config;
 	const char *phstr =  phone_number_to_string(ph);
 	GRilIoRequest *req = grilio_request_new();
 
@@ -561,10 +575,12 @@ static void ril_voicecall_dial(struct ofono_voicecall *vc,
 
 	grilio_request_append_utf8(req, phstr); /* Number to dial */
 	grilio_request_append_int32(req, clir); /* CLIR mode */
-	grilio_request_append_int32(req, 0);    /* CallDetails.call_type */
-	grilio_request_append_int32(req, 1);    /* CallDetails.call_domain */
-	grilio_request_append_int32(req, 0);    /* CallDetails.getCsvFromExtras == mParcel.writeString("") */
-	grilio_request_append_int32(req, 0);    /*                                                         */
+	if (config->samsung_calldetails) {
+		grilio_request_append_int32(req, 0);    /* CallDetails.call_type */
+		grilio_request_append_int32(req, 1);    /* CallDetails.call_domain */
+		grilio_request_append_int32(req, 0);    /* CallDetails.getCsvFromExtras == mParcel.writeString("") */
+		grilio_request_append_int32(req, 0);    /*                                                         */
+	}
 	grilio_request_append_int32(req, 0);    /* UUS information (absent) */
 
 	grilio_queue_send_request_full(vd->q, req, RIL_REQUEST_DIAL,
