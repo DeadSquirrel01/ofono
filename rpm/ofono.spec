@@ -4,7 +4,7 @@ Version:    1.23
 Release:    1
 Group:      Communications/Connectivity Adaptation
 License:    GPLv2
-URL:        https://git.sailfishos.org/mer-core/ofono
+URL:        http://github.com/DeadSquirrel01/ofono
 Source:     %{name}-%{version}.tar.bz2
 
 %define libgrilio_version 1.0.35
